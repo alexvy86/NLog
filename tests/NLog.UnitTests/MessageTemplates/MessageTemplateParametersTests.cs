@@ -83,6 +83,24 @@ namespace NLog.UnitTests.MessageTemplates
         }
 
         [Theory]
+        [InlineData("{0}", 0, "0", "0", 0, CaptureType.Normal)]
+        [InlineData("{a}", 0, "0", "a", null, CaptureType.Normal)]
+        public void IndexerTest(string input, int index, object expectedValue, string expectedName, int? expectedPositionalIndex, CaptureType expectedCaptureType)
+        {
+            // Arrange
+            var parameters = CreateParameters(1);
+
+            // Act
+            var messageTemplateParameters = new MessageTemplateParameters(input, parameters);
+
+            // Assert
+            Assert.Equal(expectedValue, messageTemplateParameters[index].Value);
+            Assert.Equal(expectedName, messageTemplateParameters[index].Name);
+            Assert.Equal(expectedPositionalIndex, messageTemplateParameters[index].PositionalIndex);
+            Assert.Equal(expectedCaptureType, messageTemplateParameters[index].CaptureType);
+        }
+
+        [Theory]
         [InlineData("", 0, true)] //empty OK
         [InlineData("  ", 0, true)] //empty OK
         [InlineData("", 1, false)]
@@ -93,19 +111,19 @@ namespace NLog.UnitTests.MessageTemplates
         [InlineData("{ 0}", 1, true)]
         [InlineData("{0} {1}", 0, false)]
         [InlineData("{0} {1}", 1, false)]
-        [InlineData("{0} {1}", 2, true)]  
+        [InlineData("{0} {1}", 2, true)]
         [InlineData("{0} {A}", 0, false)]
         [InlineData("{0} {A}", 1, false)]
-        [InlineData("{0} {A}", 2, true)]    
+        [InlineData("{0} {A}", 2, true)]
         [InlineData("{A} {1}", 0, false)]
         [InlineData("{A} {1}", 1, false)]
-        [InlineData("{A} {1}", 2, true)]  
+        [InlineData("{A} {1}", 2, true)]
         [InlineData("{A} {B}", 0, false)]
         [InlineData("{A} {B}", 1, false)]
         [InlineData("{A} {B}", 2, true)]
         [InlineData("{0} {0}", 0, false)]
         [InlineData("{0} {0}", 1, true)]
-        [InlineData("{0} {0}", 2, false)]  
+        [InlineData("{0} {0}", 2, false)]
         [InlineData("{A} {A}", 0, false)]
         [InlineData("{A} {A}", 1, false)]
         [InlineData("{A} {A}", 2, true)] //overwrite
