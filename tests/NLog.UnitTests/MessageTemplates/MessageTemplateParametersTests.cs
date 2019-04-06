@@ -49,20 +49,87 @@ namespace NLog.UnitTests.MessageTemplates
         [InlineData("I have {a} {1} {2} parameters", 3)]
         [InlineData("I have {{text}} and {{0}}", 0)]
         [InlineData(" {3} {4} {9} {8} {5} {6} {7}", 7)]
-        public void ParseParameters(string input, int count)
+        public void ParseParameters(string input, int expected)
         {
             // Arrange
+            var parameters = CreateParameters(expected);
+
+            // Act
+            var messageTemplateParameters = new MessageTemplateParameters(input, parameters);
+
+            // Assert
+            Assert.Equal(expected, messageTemplateParameters.Count);
+        }
+
+        [Theory]
+        [InlineData("", true)] // no really important when empty
+        [InlineData("{0}", true)]
+        [InlineData("{ 0}", false)] //no trimming
+        [InlineData("{0} {1} {2}", true)]
+        [InlineData("{a}", false)]
+        [InlineData("{a} {0}", false)]
+        [InlineData("{0} {a}", false)]
+        [InlineData("{0} {a} {1}", false)]
+        public void IsPositionalTest(string input, bool expected)
+        {
+            // Arrange
+            var parameters = CreateParameters(10);
+
+            // Act
+            var messageTemplateParameters = new MessageTemplateParameters(input, parameters);
+
+            // Assert
+            Assert.Equal(expected, messageTemplateParameters.IsPositional);
+        }
+
+        [Theory]
+        [InlineData("", 0, true)] //empty OK
+        [InlineData("  ", 0, true)] //empty OK
+        [InlineData("", 1, false)]
+        [InlineData("{0}", 1, true)]
+        [InlineData("{A}", 1, true)]
+        [InlineData("{A}", 0, false)]
+        [InlineData("{A}", 2, false)]
+        [InlineData("{ 0}", 1, true)]
+        [InlineData("{0} {1}", 0, false)]
+        [InlineData("{0} {1}", 1, false)]
+        [InlineData("{0} {1}", 2, true)]  
+        [InlineData("{0} {A}", 0, false)]
+        [InlineData("{0} {A}", 1, false)]
+        [InlineData("{0} {A}", 2, true)]    
+        [InlineData("{A} {1}", 0, false)]
+        [InlineData("{A} {1}", 1, false)]
+        [InlineData("{A} {1}", 2, true)]  
+        [InlineData("{A} {B}", 0, false)]
+        [InlineData("{A} {B}", 1, false)]
+        [InlineData("{A} {B}", 2, true)]
+        [InlineData("{0} {0}", 0, false)]
+        [InlineData("{0} {0}", 1, true)]
+        [InlineData("{0} {0}", 2, false)]  
+        [InlineData("{A} {A}", 0, false)]
+        [InlineData("{A} {A}", 1, false)]
+        [InlineData("{A} {A}", 2, true)] //overwrite
+        public void IsValidTemplateTest(string input, int parameterCount, bool expected)
+        {
+            // Arrange
+            var parameters = CreateParameters(parameterCount);
+
+            // Act
+            var messageTemplateParameters = new MessageTemplateParameters(input, parameters);
+
+            // Assert
+            Assert.Equal(expected, messageTemplateParameters.IsValidTemplate);
+        }
+
+        private static object[] CreateParameters(int count)
+        {
             var parameters = new List<object>(count);
             for (int i = 0; i < count; i++)
             {
                 parameters.Add(i.ToString());
             }
 
-            // Act
-            var MessageTemplateParameters = new MessageTemplateParameters(input, parameters.ToArray());
-
-            // Assert
-            Assert.Equal(count, MessageTemplateParameters.Count);
+            return parameters.ToArray();
         }
     }
 }
