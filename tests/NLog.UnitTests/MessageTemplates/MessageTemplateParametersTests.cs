@@ -101,6 +101,24 @@ namespace NLog.UnitTests.MessageTemplates
         }
 
         [Theory]
+        [InlineData("{a}", "a")]
+        [InlineData("{a} {b}", "a;b")]
+        [InlineData("{b} {0} {a} ", "b;0;a")]
+        public void EnumeratorTest(string input, string namesRaw)
+        {
+            // Arrange
+            var parameters = CreateParameters(1);
+            var names = namesRaw.Split(';');
+
+            // Act
+            var messageTemplateParameters = new MessageTemplateParameters(input, parameters);
+
+            // Assert
+            var resultNames = messageTemplateParameters.Select(t => t.Name).ToArray();
+            Assert.Equal(names, resultNames);
+        }
+
+        [Theory]
         [InlineData("", 0, true)] //empty OK
         [InlineData("  ", 0, true)] //empty OK
         [InlineData("", 1, false)]
